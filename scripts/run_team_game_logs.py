@@ -1,4 +1,4 @@
-"""CLI entry point for scraping team depth charts."""
+"""CLI entry point for scraping team game logs."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import sys
 from typing import Sequence
 
 from pfr_scraper.http.cookies import load_cookies_from_file
-from pfr_scraper.scrapers import DEFAULT_TEAM_CODES, TeamDepthChartScraper
+from pfr_scraper.scrapers import DEFAULT_TEAM_CODES, TeamGameLogScraper
 
 
 def parse_args(argv: Sequence[str]) -> argparse.Namespace:
@@ -19,6 +19,11 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
         nargs="*",
         help="Optional subset of team codes to scrape (defaults to all active franchises)",
     )
+    parser.add_argument(
+        "--no-playoffs",
+        action="store_true",
+        help="Skip playoff game logs and only export regular season data",
+    )
     return parser.parse_args(argv)
 
 
@@ -29,10 +34,19 @@ def main(argv: Sequence[str] | None = None) -> int:
         print("Loaded Cloudflare cookies from configs/cf_cookies.json")
 
     teams = tuple(args.teams) if args.teams else DEFAULT_TEAM_CODES
-    scraper = TeamDepthChartScraper(season=args.season, teams=teams)
+    scraper = TeamGameLogScraper(
+        season=args.season,
+        teams=teams,
+        include_playoffs=not args.no_playoffs,
+    )
     records = scraper.run()
 
-    print(f"Scraped {len(records)} depth chart slots for season {args.season}.")
+    print(
+        "Scraped {count} game log entries for season {season}.".format(
+            count=len(records),
+            season=args.season,
+        )
+    )
     return 0
 
 

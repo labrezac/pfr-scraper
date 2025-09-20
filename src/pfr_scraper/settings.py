@@ -2,6 +2,18 @@
 
 from dataclasses import dataclass, field
 from pathlib import Path
+import os
+
+
+def _env_mapping(prefix: str) -> dict[str, str]:
+    mapping: dict[str, str] = {}
+    offset = len(prefix)
+    for key, value in os.environ.items():
+        if key.startswith(prefix):
+            normalized = key[offset:]
+            normalized = normalized.replace("__", "-")
+            mapping[normalized] = value
+    return mapping
 
 
 @dataclass(slots=True)
@@ -20,12 +32,27 @@ class DataPaths:
 
 
 @dataclass(slots=True)
+class HttpSettings:
+    """Optional overrides for HTTP headers and cookies."""
+
+    base_headers: dict[str, str] = field(default_factory=dict)
+    cookies: dict[str, str] = field(default_factory=dict)
+
+    @classmethod
+    def from_env(cls) -> "HttpSettings":
+        headers = _env_mapping("PFR_HTTP_HEADER_")
+        cookies = _env_mapping("PFR_HTTP_COOKIE_")
+        return cls(base_headers=headers, cookies=cookies)
+
+
+@dataclass(slots=True)
 class Settings:
     """Runtime settings for scraper jobs."""
 
     user_agent_seed: str = "pfr-scraper"
     request_timeout: float = 10.0
     data_paths: DataPaths = field(default_factory=DataPaths)
+    http: "HttpSettings" = field(default_factory=lambda: HttpSettings.from_env())
 
 
 settings = Settings()

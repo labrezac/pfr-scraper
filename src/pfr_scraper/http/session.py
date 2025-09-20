@@ -58,14 +58,20 @@ def build_session(
     session = requests.Session()
     headers: MutableMapping[str, str] = session.headers.copy()
 
-    if settings.user_agent_seed:
-        headers.setdefault("User-Agent", settings.user_agent_seed)
+    if settings.http.base_headers:
+        headers.update(settings.http.base_headers)
+
+    if settings.user_agent_seed and "User-Agent" not in headers:
+        headers["User-Agent"] = settings.user_agent_seed
 
     if base_headers:
         headers.update(base_headers)
 
     session.headers.clear()
     session.headers.update(headers)
+
+    if settings.http.cookies:
+        session.cookies.update(settings.http.cookies)
 
     _attach_request_pipeline(session, resolved_emulator)
 

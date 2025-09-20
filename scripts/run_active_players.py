@@ -6,16 +6,19 @@ import argparse
 import sys
 from typing import Sequence
 
+from pfr_scraper.http.cookies import load_cookies_from_file
 from pfr_scraper.scrapers import ActivePlayersScraper
 
 
 def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--letters",
+        "letter",
         metavar="LETTER",
-        nargs="*",
-        help="Optional subset of player index letters to scrape (defaults to A-Z)",
+        help=(
+            "Single player index letter to scrape (A-Z). Run this command multiple "
+            "times to build the full active roster dataset."
+        ),
     )
     return parser.parse_args(argv)
 
@@ -23,10 +26,17 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv or sys.argv[1:])
 
-    scraper = ActivePlayersScraper(letters=args.letters if args.letters else None)
+    if load_cookies_from_file():
+        print("Loaded Cloudflare cookies from configs/cf_cookies.json")
+
+    letter = args.letter.upper()
+    if len(letter) != 1 or not letter.isalpha():
+        raise SystemExit("letter must be a single alphabetical character (A-Z)")
+
+    scraper = ActivePlayersScraper(letters=(letter,))
     records = scraper.run()
 
-    print(f"Scraped {len(records)} active players.")
+    print(f"Scraped {len(records)} active players for index '{letter}'.")
     return 0
 
 

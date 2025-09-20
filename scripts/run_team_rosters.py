@@ -6,6 +6,7 @@ import argparse
 import sys
 from typing import Sequence
 
+from pfr_scraper.http.cookies import load_cookies_from_file
 from pfr_scraper.scrapers import DEFAULT_TEAM_CODES, TeamRosterScraper
 
 
@@ -23,6 +24,9 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv or sys.argv[1:])
+
+    if load_cookies_from_file():
+        print("Loaded Cloudflare cookies from configs/cf_cookies.json")
 
     teams = tuple(args.teams) if args.teams else DEFAULT_TEAM_CODES
     scraper = TeamRosterScraper(season=args.season, teams=teams)

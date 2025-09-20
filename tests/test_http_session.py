@@ -68,6 +68,11 @@ def test_build_session_merges_headers_and_records_success(monkeypatch: Any) -> N
 
     monkeypatch.setattr(requests.Session, "request", fake_request, raising=False)
 
+    original_headers = dict(settings.http.base_headers)
+    original_cookies = dict(settings.http.cookies)
+    settings.http.base_headers = {"X-Env": "env"}
+    settings.http.cookies = {"cf_clearance": "token"}
+
     emulator = DummyEmulator()
     session = build_session(emulator=emulator, base_headers={"X-Base": "base"})
 
@@ -78,13 +83,18 @@ def test_build_session_merges_headers_and_records_success(monkeypatch: Any) -> N
     assert headers["X-Extra"] == "1"
     assert headers["X-Generated"] == "value"
     assert headers["User-Agent"] == "dummy-UA"
+    assert headers["X-Env"] == "env"
 
     cookies = captured["cookies"]
     assert cookies["session"] == "abc"
+    assert session.cookies.get("cf_clearance") == "token"
 
     assert captured["timeout"] == settings.request_timeout
     assert emulator.rotator.successes == ["profile-1"]
     assert emulator.rotator.failures == []
+
+    settings.http.base_headers = original_headers
+    settings.http.cookies = original_cookies
 
 
 def test_build_session_records_failure_on_exception(monkeypatch: Any) -> None:
