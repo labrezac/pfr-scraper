@@ -1,6 +1,6 @@
 """Project-wide configuration helpers."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 
@@ -25,7 +25,7 @@ class Settings:
 
     user_agent_seed: str = "pfr-scraper"
     request_timeout: float = 10.0
-    data_paths: DataPaths = DataPaths()
+    data_paths: DataPaths = field(default_factory=DataPaths)
 
 
 settings = Settings()
