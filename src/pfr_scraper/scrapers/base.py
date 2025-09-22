@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any, Iterable
 
-from pfr_scraper.http import build_session
+from pfr_scraper.http.fetch import fetch_html
 
 
 class Scraper(ABC):
@@ -26,10 +26,7 @@ class Scraper(ABC):
         benefiting from the shared header emulator integration.
         """
 
-        session = build_session()
-        response = session.get(self.endpoint)
-        response.raise_for_status()
-        return response
+        return fetch_html(self.endpoint)
 
     @property
     @abstractmethod

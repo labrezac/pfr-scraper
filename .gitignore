@@ -16,5 +16,8 @@ data/processed/*
 logs/*
 !logs/.gitkeep
 
+# Local credentials / clearance tokens
+configs/cf_cookies.json
+
 # Notebooks
 notebooks/.ipynb_checkpoints/

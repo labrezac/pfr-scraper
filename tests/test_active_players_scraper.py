@@ -73,11 +73,15 @@ def test_active_players_scraper_run(tmp_path, monkeypatch) -> None:
 
     first = records_by_id["TestPl00"]
     assert first.player_name == "Test Player"
+    assert first.first_name == "Test"
+    assert first.last_name == "Player"
     assert first.letter == "A"
     assert first.url == "https://www.pro-football-reference.com/players/A/TestPl00.htm"
     assert first.position == "QB"
 
     second = records_by_id["ProxyPl01"]
+    assert second.first_name == "Proxy"
+    assert second.last_name == "Player"
     assert second.position is None
 
     output_path = tmp_path / "processed" / "active_players.csv"
@@ -93,6 +97,8 @@ def test_active_players_scraper_run(tmp_path, monkeypatch) -> None:
         "TestPl00": {
             "player_id": "TestPl00",
             "player_name": "Test Player",
+            "first_name": "Test",
+            "last_name": "Player",
             "letter": "A",
             "url": "https://www.pro-football-reference.com/players/A/TestPl00.htm",
             "position": "QB",
@@ -100,6 +106,8 @@ def test_active_players_scraper_run(tmp_path, monkeypatch) -> None:
         "ProxyPl01": {
             "player_id": "ProxyPl01",
             "player_name": "Proxy Player",
+            "first_name": "Proxy",
+            "last_name": "Player",
             "letter": "A",
             "url": "https://www.pro-football-reference.com/players/A/ProxyPl01.htm",
             "position": "",

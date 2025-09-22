@@ -16,10 +16,20 @@ When present, these values are applied to every `requests.Session` the scrapers 
 To minimise Cloudflare challenges the active-player CLI scrapes a single index letter per run:
 
 ```
-python scripts/run_active_players.py A
+python scripts/run_active_players.py --letters A B --delay 3
 ```
 
-Invoke the command repeatedly with different letters (and insert short pauses) to assemble the full active roster dataset.
+Omit `--letters` to process all A-Z in one run; the delay is applied between each request to stay under the radar.
+
+### Browser fallback
+
+If requests-based fetching still returns 403s, point the scraper at a real Chrome profile by exporting:
+
+```
+export PFR_PLAYWRIGHT_PROFILE_DIR="/Users/you/Library/Application Support/Google/Chrome/Profile 5"
+```
+
+The fetcher will transparently fall back to Playwright, reusing the cookies stored in that profile. You can combine this with `fetch_cf_cookies.py --extend` to keep the clearance tokens in `configs/cf_cookies.json`.
 
 ### Harvesting Cloudflare cookies
 

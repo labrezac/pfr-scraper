@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 
 from pfr_scraper.http import build_session
+from pfr_scraper.http.fetch import fetch_html
 from pfr_scraper.scrapers.base import Scraper
 from pfr_scraper.settings import settings
 
@@ -78,9 +79,7 @@ class TeamGameLogScraper(Scraper):
         try:
             for team in self.teams:
                 url = f"{self.endpoint}{team}/{self.season}/gamelog/"
-                response = session.get(url)
-                response.raise_for_status()
-                pages[team] = response.text
+                pages[team] = fetch_html(url, session=session)
         finally:
             session.close()
 

@@ -4,7 +4,7 @@ Entry points for running scrapers and pipelines from the command line will live 
 
 ## Available scripts
 
-- `python scripts/run_active_players.py LETTER`: fetch active players for a single index letter (A-Z) and append to `data/processed/active_players.csv`. Run repeatedly for additional letters.
+- `python scripts/run_active_players.py [--letters A B ...] [--delay 3.0]`: fetch active players for one or more index letters (defaults to all A-Z). A delay is applied between letters to keep Cloudflare happy.
 - `python scripts/run_team_rosters.py SEASON [--teams sfo nyg ...]`: pull roster tables for the given season, persisting results to `data/processed/team_rosters_SEASON.csv` and HTML snapshots under `data/raw/team_rosters/SEASON/`.
 - `python scripts/run_team_depth_chart.py SEASON [--teams sfo nyg ...]`: capture depth chart slots for the season, writing `data/processed/team_depth_chart_SEASON.csv` and raw pages to `data/raw/team_depth_charts/SEASON/`.
 - `python scripts/run_team_game_logs.py SEASON [--teams sfo nyg ...] [--no-playoffs]`: export per-game logs (regular season by default, playoffs optional) with results saved to `data/processed/team_game_logs_SEASON.csv` and snapshots under `data/raw/team_game_logs/SEASON/`.

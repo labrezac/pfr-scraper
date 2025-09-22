@@ -37,12 +37,19 @@ class HttpSettings:
 
     base_headers: dict[str, str] = field(default_factory=dict)
     cookies: dict[str, str] = field(default_factory=dict)
+    playwright_profile_dir: Path | None = None
 
     @classmethod
     def from_env(cls) -> "HttpSettings":
         headers = _env_mapping("PFR_HTTP_HEADER_")
         cookies = _env_mapping("PFR_HTTP_COOKIE_")
-        return cls(base_headers=headers, cookies=cookies)
+        profile_env = os.environ.get("PFR_PLAYWRIGHT_PROFILE_DIR")
+        profile_dir = Path(profile_env).expanduser() if profile_env else None
+        return cls(
+            base_headers=headers,
+            cookies=cookies,
+            playwright_profile_dir=profile_dir,
+        )
 
 
 @dataclass(slots=True)

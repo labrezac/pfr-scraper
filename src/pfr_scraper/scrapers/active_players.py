@@ -5,10 +5,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable, List, Mapping, Sequence
 
+import time
+
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
 from pfr_scraper.http import build_session
+from pfr_scraper.http.fetch import fetch_html
 from pfr_scraper.scrapers.base import Scraper
 from pfr_scraper.settings import settings
 
@@ -21,6 +24,8 @@ class ActivePlayerRecord:
 
     player_id: str
     player_name: str
+    first_name: str
+    last_name: str
     letter: str
     url: str
     position: str | None
@@ -29,10 +34,16 @@ class ActivePlayerRecord:
 class ActivePlayersScraper(Scraper):
     """Scrape every active player index page and persist the results as CSV."""
 
-    def __init__(self, *, letters: Sequence[str] | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        letters: Sequence[str] | None = None,
+        delay_seconds: float = 0.0,
+    ) -> None:
         self.letters: tuple[str, ...] = tuple(
             letter.upper() for letter in (letters or tuple(chr(i) for i in range(ord("A"), ord("Z") + 1)))
         )
+        self.delay_seconds = max(0.0, delay_seconds)
 
     @property
     def endpoint(self) -> str:
@@ -45,11 +56,11 @@ class ActivePlayersScraper(Scraper):
         session = build_session()
         responses: dict[str, str] = {}
         try:
-            for letter in self.letters:
+            for index, letter in enumerate(self.letters):
                 url = f"{self.endpoint}{letter}/"
-                response = session.get(url)
-                response.raise_for_status()
-                responses[letter] = response.text
+                responses[letter] = fetch_html(url, session=session)
+                if self.delay_seconds > 0 and index < len(self.letters) - 1:
+                    time.sleep(self.delay_seconds)
         finally:
             session.close()
         return responses
@@ -75,11 +86,14 @@ class ActivePlayersScraper(Scraper):
                 full_url = _resolve_url(href)
 
                 position = _extract_position(bold, name)
+                first_name, last_name = _split_name(name)
 
                 # Deduplicate based on player id in case pages overlap unexpectedly.
                 records[player_id] = ActivePlayerRecord(
                     player_id=player_id,
                     player_name=name,
+                    first_name=first_name,
+                    last_name=last_name,
                     letter=letter,
                     url=full_url,
                     position=position,
@@ -95,7 +109,15 @@ class ActivePlayersScraper(Scraper):
         processed_dir.mkdir(parents=True, exist_ok=True)
         output_path = processed_dir / "active_players.csv"
 
-        fieldnames = ["player_id", "player_name", "letter", "url", "position"]
+        fieldnames = [
+            "player_id",
+            "player_name",
+            "first_name",
+            "last_name",
+            "letter",
+            "url",
+            "position",
+        ]
 
         import csv
 
@@ -107,6 +129,8 @@ class ActivePlayersScraper(Scraper):
                     {
                         "player_id": record.player_id,
                         "player_name": record.player_name,
+                        "first_name": record.first_name,
+                        "last_name": record.last_name,
                         "letter": record.letter,
                         "url": record.url,
                         "position": record.position or "",
@@ -133,6 +157,17 @@ def _extract_position(bold_tag: Tag, player_name: str) -> str | None:
     if suffix.startswith("(") and suffix.endswith(")"):
         return suffix[1:-1].strip() or None
     return None
+
+
+def _split_name(full_name: str) -> tuple[str, str]:
+    if not full_name:
+        return "", ""
+    tokens = full_name.strip().split()
+    if len(tokens) == 1:
+        return tokens[0], ""
+    first = tokens[0]
+    last = " ".join(tokens[1:])
+    return first, last
 
 
 __all__ = ["ActivePlayersScraper", "ActivePlayerRecord"]
